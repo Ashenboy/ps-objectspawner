@@ -3,16 +3,12 @@ local ServerObjects = {}
 
 RegisterNetEvent("ps-objectspawner:server:CreateNewObject", function(model, coords, objecttype, options, objectname)
     local src = source
-    if QBCore.Functions.HasPermission(src, 'god') then
-        if model and coords then
-            local data = MySQL.query.await("INSERT INTO objects (model, coords, type, options, name) VALUES (?, ?, ?, ?, ?)", { model, json.encode(coords), objecttype, json.encode(options), objectname })
-            ServerObjects[data.insertId] = {id = data.insertId, model = model, coords = coords, type = objecttype, name = objectname, options = options}
-            TriggerClientEvent("ps-objectspawner:client:AddObject", -1, {id = data.insertId, model = model, coords = coords, type = objecttype, name = objectname, options = options})
-        else 
-            print("[PS-OBJECTSPAWNER]: Object or coords was invalid")
-        end
-    else
-        print("[PS-OBJECTSPAWNER]: You don't have permissions for this")
+    if model and coords then
+        local data = MySQL.query.await("INSERT INTO objects (model, coords, type, options, name) VALUES (?, ?, ?, ?, ?)", { model, json.encode(coords), objecttype, json.encode(options), objectname })
+        ServerObjects[data.insertId] = {id = data.insertId, model = model, coords = coords, type = objecttype, name = objectname, options = options}
+        TriggerClientEvent("ps-objectspawner:client:AddObject", -1, {id = data.insertId, model = model, coords = coords, type = objecttype, name = objectname, options = options})
+    else 
+        print("[PS-OBJECTSPAWNER]: Object or coords was invalid")
     end
 end)
 
@@ -38,14 +34,10 @@ end)
 
 RegisterNetEvent("ps-objectspawner:server:DeleteObject", function(objectid)
     local src = source
-    if QBCore.Functions.HasPermission(src, 'god') then
-        if objectid > 0 then
-            local data = MySQL.query.await('DELETE FROM objects WHERE id = ?', {objectid})
-            ServerObjects[objectid] = nil
-            TriggerClientEvent("ps-objectspawner:client:receiveObjectDelete", -1, objectid)
-        end
-    else
-        print("[PS-OBJECTSPAWNER]: You don't have permissions for this")
+    if objectid > 0 then
+        local data = MySQL.query.await('DELETE FROM objects WHERE id = ?', {objectid})
+        ServerObjects[objectid] = nil
+        TriggerClientEvent("ps-objectspawner:client:receiveObjectDelete", -1, objectid)
     end
 end)
 
@@ -54,3 +46,7 @@ local function CreateDataObject(mode, coords, type, options, objectname)
 end
 
 exports("CreateDataObject", CreateDataObject)
+
+QBCore.Commands.Add('object', "spawn objects (Admin only)", {}, false, function(source)
+    TriggerClientEvent('ps-objectspawner:client:open',source)
+end, 'admin')

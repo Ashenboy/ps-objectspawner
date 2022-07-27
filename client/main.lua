@@ -53,14 +53,6 @@ end
 
 AddEventHandler('onResourceStart', function(resourceName)
     if GetCurrentResourceName() == resourceName then
-        QBCore.Functions.TriggerCallback('qb-afkkick:server:GetPermissions', function(UserGroup)
-            group = UserGroup
-            if group and group['god'] or group == 'god' then
-                RegisterCommand('object', function()
-                    openMenu()
-                end)
-            end
-        end)
         QBCore.Functions.TriggerCallback('ps-objectspawner:server:RequestObjects', function(incObjectList)
             ObjectList = incObjectList
         end)
@@ -84,14 +76,6 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     end)
 
     Wait(1500)
-    QBCore.Functions.TriggerCallback('qb-afkkick:server:GetPermissions', function(UserGroup)
-        group = UserGroup
-        if group and group['god'] or group == 'god' then
-            RegisterCommand('object', function()
-                openMenu()
-            end)
-        end
-    end)
 end)
 
 local function ButtonMessage(text)
@@ -341,45 +325,43 @@ end)
 
 RegisterNetEvent("ps-objectspawner:client:AddObject", function(object)
     ObjectList[object.id] = object
-    if group and group['god'] or group == 'god' then
-        SendNUIMessage({ 
-            action = "created",
-            newSpawnedObject = object,
-        })
-    end
+    SendNUIMessage({ 
+        action = "created",
+        newSpawnedObject = object,
+    })
 end)
 
 RegisterNUICallback('tpTo', function(data, cb)
-    if group and group['god'] or group == 'god' then
-        SetEntityCoords(PlayerPedId(), data.coords.x+1, data.coords.y+1, data.coords.z)
-    end
+    SetEntityCoords(PlayerPedId(), data.coords.x+1, data.coords.y+1, data.coords.z)
+    
     cb('ok')
 end)
 
 RegisterNUICallback('delete', function(data, cb)
-    if group and group['god'] or group == 'god' then
-        TriggerServerEvent("ps-objectspawner:server:DeleteObject", data.id)
-    end
+    TriggerServerEvent("ps-objectspawner:server:DeleteObject", data.id)
     cb('ok')
 end)
 
 RegisterNetEvent('ps-objectspawner:client:receiveObjectDelete', function(id)
-    if group and group['god'] or group == 'god' then
-        if ObjectList[id]["IsRendered"] then
-            if DoesEntityExist(ObjectList[id]["object"]) then 
-                for i = 255, 0, -51 do
-                    Wait(50)
-                    SetEntityAlpha(ObjectList[id]["object"], i, false)
-                end
-                DeleteObject(ObjectList[id]["object"])
-
-                RemoveRoadNodeSpeedZone(ObjectList[id]["speedzone"])
+    if ObjectList[id]["IsRendered"] then
+        if DoesEntityExist(ObjectList[id]["object"]) then 
+            for i = 255, 0, -51 do
+                Wait(50)
+                SetEntityAlpha(ObjectList[id]["object"], i, false)
             end
+            DeleteObject(ObjectList[id]["object"])
+
+            RemoveRoadNodeSpeedZone(ObjectList[id]["speedzone"])
         end
-        ObjectList[id] = nil
-        SendNUIMessage({ 
-            action = "delete",
-            id = id,
-        })
     end
+    ObjectList[id] = nil
+    SendNUIMessage({
+        action = "delete",
+        id = id,
+    })
+end)
+
+RegisterNetEvent('ps-objectspawner:client:open')
+AddEventHandler('ps-objectspawner:client:open', function()
+    openMenu()
 end)
